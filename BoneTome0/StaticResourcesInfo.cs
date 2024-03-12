@@ -10,6 +10,7 @@ internal static class StaticResourcesInfo
 
         provider.Add(GetPageResources());
         provider.Add(GetCssResources());
+        provider.Add(GetJsResources());
         provider.Add(GetBinaryResources());
 
         return provider;
@@ -27,7 +28,13 @@ internal static class StaticResourcesInfo
         {
             new("/bootstrap/bootstrap.min.css"),
             new("/app.css"),
-            new("/Sample.BlazorSSG.styles.css")
+            new("/BoneTome0.styles.css")
+        };
+
+    private static IEnumerable<JsResource> GetJsResources() =>
+        new JsResource[]
+        {
+            new("_framework/blazor.web.js")
         };
 
     private static IEnumerable<BinResource> GetBinaryResources() =>
