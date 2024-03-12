@@ -1,3 +1,4 @@
+using AspNetStatic;
 using BoneTome0.Components;
 
 namespace BoneTome0;
@@ -6,29 +7,55 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
+        bool onlyServeStaticContent = "SHOW_STATIC_CONTENT_ONLY".Equals(
+            Environment.GetEnvironmentVariable("CONTENT_MODE"),
+            StringComparison.OrdinalIgnoreCase);
 
-        // Add services to the container.
-        builder.Services.AddRazorComponents()
-            .AddInteractiveServerComponents();
+        bool runningInSsgMode = args.HasExitWhenDoneArg();
+        
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-        var app = builder.Build();
-
-        // Configure the HTTP request pipeline.
-        if (!app.Environment.IsDevelopment())
+        if (!builder.Environment.IsDevelopment())
         {
-            app.UseExceptionHandler("/Error");
-            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-            app.UseHsts();
+            builder.WebHost.UseStaticWebAssets();
+        }
+        
+        // Add services to the container.
+        builder.Services.AddRazorComponents();
+
+        if (!onlyServeStaticContent && runningInSsgMode)
+        {
+            builder.Services.AddSingleton<IStaticResourcesInfoProvider>(
+                StaticResourcesInfo.GetProvider());
         }
 
-        app.UseHttpsRedirection();
+        WebApplication app = builder.Build();
+
+        if (onlyServeStaticContent)
+        {
+            app.UseDefaultFiles();
+        }
 
         app.UseStaticFiles();
-        app.UseAntiforgery();
 
-        app.MapRazorComponents<App>()
-            .AddInteractiveServerRenderMode();
+        if (!onlyServeStaticContent)
+        {
+            app.UseAntiforgery();
+
+            app.MapRazorComponents<App>();
+
+            if (runningInSsgMode)
+            {
+                const string OutputDirName = "docs";
+                string ssgOutputDir = Path.Combine("..", OutputDirName);
+
+                Directory.CreateDirectory(ssgOutputDir);
+                
+                app.GenerateStaticContent(
+                    ssgOutputDir,
+                    exitWhenDone: true);
+            }
+        }
 
         app.Run();
     }
