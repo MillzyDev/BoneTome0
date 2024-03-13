@@ -19,8 +19,8 @@ internal static class StaticResourcesInfo
     private static IEnumerable<PageResource> GetPageResources() =>
         new PageResource[]
         {
-            new("/") { OutFile = "Index.html" },
-            new("/Weather"),
+            new("/") { OutFile = "index.html" },
+            new("/mods")
         };
 
     private static IEnumerable<CssResource> GetCssResources() =>
@@ -41,6 +41,7 @@ internal static class StaticResourcesInfo
         new BinResource[]
         {
             new("/favicon.png"),
+            new("/modsicon.svg")
         };
 
 }
